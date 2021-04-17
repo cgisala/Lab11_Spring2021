@@ -24,7 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'p-v6nt%u*m)!409#4so&u6w$lv6807j4+_@szs8y(&mud)7k!k'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if os.getenv('GAE_INSTANCE'):
+    DEBUG = False
+else:
+    DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -89,7 +92,12 @@ DATABASES = {
 # If not running at GAE, then replace the host with your local 
 # computer to connect to the database via cloud_sql_proxy
 if not os.getenv('GAE_INSTANCE'):
-    DATABASES['default']['HOST'] = '127.0.0.1'
+    DATABASES = {
+        'default' :{
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
 
 
 # Password validation
@@ -131,10 +139,24 @@ USE_TZ = True
 # Specify a location to copy static files to when running python manage.py collectstatic
 STATIC_ROOT = os.path.join(BASE_DIR, 'www', 'static')
 
-STATIC_URL = '/static/'
-
 #Media URL, for user-created media - becomes part of URL when images are displayed
-MEDIA_URL = '/media/'
+#MEDIA_URL = '/media/'
 
 #where in the file system to save user-uploaded files
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+if os.getenv('GAE_INSTANCE'):
+    GS_STATIC_FILE_BUCKET = 'wishlist-django-310508.appspot.com'
+    STATIC_URL = f'https://storage.googleapis.com/{GS_STATIC_FILE_BUCKET}/static/'
+
+    GS_BUCKET_NAME = 'user-uploaded-images-123'
+    MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/media/'
+
+    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+
+    from google.oauth2 import service_account
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file('travel_credentials.json')
+
+else:
+    STATIC_URL = '/static/'
+    MEDIA_URL = '/media/'

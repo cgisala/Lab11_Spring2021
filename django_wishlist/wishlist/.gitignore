@@ -2,3 +2,9 @@ env/
 env2/
 .directory
 cloud_sql_proxy
+db.sqlite3
+*.pyc
+__pycache__
+travel_credentials.json
+app.yaml
+
